@@ -1,8 +1,9 @@
 %{
-#include <stdio.h>
+#include "ocbl.hh"
+
+#define yyerror Ocbl::yyerror
 
 int yylex(void);
-void yyerror(const char *s);
 %}
 
 %token NAMESPACE "namespace"
@@ -34,13 +35,3 @@ class: CLASS "{" "}";
 interface: INTERFACE "{" "}";
 
 %%
-
-int main(const int argc, const char **argv)
-{
-    return yyparse();
-}
-
-void yyerror(const char *s)
-{
-    fprintf(stderr, "%s\n", s);
-}
