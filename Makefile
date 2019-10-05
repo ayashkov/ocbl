@@ -9,21 +9,25 @@ YACC=bison
 MKDIR=mkdir
 RM=rm
 
-all: $(TARGET)/ocbl
+$(TARGET)/%.o: %.cc $(TARGET)
+	$(CXX) -I$(SRC) -I$(TARGET) -c -o $@ $<
 
-$(TARGET)/ocbl: $(TARGET)/ocbl.o $(TARGET)/lexer.o $(TARGET)/parser.o
+$(TARGET)/%.o: $(TARGET)/%.cc
+	$(CXX) -I$(SRC) -I$(TARGET) -c -o $@ $<
+
+all: $(TARGET)/driver
+
+$(TARGET)/driver: $(TARGET)/driver.o $(TARGET)/scanner.o $(TARGET)/parser.o
 	$(CXX) -o $@ $^
 
 $(TARGET):
 	$(MKDIR) $(TARGET)
 
-$(TARGET)/%.o: %.cc $(TARGET)
-	$(CXX) -I$(SRC) -c -o $@ $<
+$(TARGET)/driver.o: $(TARGET)/parser.hh
 
-%.o: %.cc $(TARGET)
-	$(CXX) -I$(SRC) -c -o $@ $<
+$(TARGET)/scanner.o: $(TARGET)/parser.hh
 
-$(TARGET)/lexer.cc: lexer.l $(TARGET)/parser.hh
+$(TARGET)/scanner.cc: scanner.l $(TARGET)
 	$(LEX) -o $@ $<
 
 $(TARGET)/parser.cc: parser.y $(TARGET)

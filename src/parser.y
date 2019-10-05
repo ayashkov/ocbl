@@ -1,37 +1,60 @@
 %{
-#include "ocbl.hh"
+#include "parser.hh"
+#include "scanner.hh"
 
-#define yyerror Ocbl::yyerror
-
-int yylex(void);
+#define yylex driver.scanner->yylex
 %}
 
-%token NAMESPACE "namespace"
-%token IMPORT "import"
-%token CLASS "class"
-%token INTERFACE "interface"
-%token PRIVATE "private"
-%token NAME
-%token STRING
+%code requires {
+    #include <iostream>
+    #include "driver.hh"
+    #include "location.hh"
+    #include "position.hh"
+}
+
+%code provides {
+    namespace parser {
+        // Forward declaration of the Driver class
+        class Driver;
+
+        inline void yyerror(const char* msg) {
+            std::cerr << msg << std::endl;
+        }
+    }
+}
+
+%require "2.4"
+%language "C++"
+%locations
+%defines
+%debug
+%define api.namespace {parser}
+%define api.parser.class {Parser}
+%define parse.error verbose
+%parse-param {Driver &driver}
+%lex-param {Driver &driver}
+%union {
+ /* YYLTYPE */
+}
+
+/* Tokens */
+%token TOK_EOF 0
+/* Entry point of grammar */
+%start start
 
 %%
 
-module: namespace imports units;
-
-namespace: /* %empty */ | NAMESPACE global_name ";";
-
-imports: /* %empty */ | imports import;
-
-import: IMPORT global_name ";";
-
-global_name: NAME | global_name "." NAME;
-
-units: unit | unit units;
-
-unit: class | interface;
-
-class: CLASS "{" "}";
-
-interface: INTERFACE "{" "}";
+start:
+     /* empty */
+;
 
 %%
+
+namespace parser
+{
+    void Parser::error(const location&, const std::string& m)
+    {
+        std::cerr << *driver.location_ << ": " << m << std::endl;
+        driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
+    }
+}
