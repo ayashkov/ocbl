@@ -28,11 +28,11 @@ namespace parser {
     private:
         Scanner *scanner;
 
-        Parser *parser_;
+        Parser *parser;
 
-        location *location_;
+        location *loc;
 
-        int error_;
+        int error;
 
         friend class Scanner;
 

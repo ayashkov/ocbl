@@ -7,15 +7,15 @@
 
 #define STEP()                                      \
     do {                                            \
-        driver.location_->step();                   \
+        driver.loc->step();                   \
     } while (0)
 
 #define COL(col)				                    \
-    driver.location_->columns(col)
+    driver.loc->columns(col)
 
 #define LINE(line)				                    \
     do {						                    \
-        driver.location_->lines(line);		        \
+        driver.loc->lines(line);		        \
     } while (0)
 
 #define YY_USER_ACTION				                \
@@ -53,9 +53,9 @@ eol         [\n\r]+
 
 {eol}       LINE(yyleng);
 .           {
-                std::cerr << *driver.location_ << "Unexpected token: "
+                std::cerr << *driver.loc << "Unexpected token: "
                     << *yytext << std::endl;
-                driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
+                driver.error = driver.error == 127 ? 127 : driver.error + 1;
                 STEP();
             }
 
