@@ -1,10 +1,11 @@
 #include "spec.hh"
 
 using namespace std;
+using namespace spec;
 
 static int o = 21;
 
-static int s1 = describe("Test for test", _() {
+static int s = describe("Test for test", _() {
     int *v = new int(1);
 
     beforeEach($() {
