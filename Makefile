@@ -1,7 +1,10 @@
 # directories
 SRC=src
+SPEC=test
 TARGET=target
-VPATH=$(SRC)
+BIN=$(TARGET)/bin
+GEN=$(TARGET)/generated
+TEST=$(TARGET)/test
 
 # tools
 LEX=flex
@@ -9,31 +12,46 @@ YACC=bison
 MKDIR=mkdir
 RM=rm
 
-$(TARGET)/%.o: %.cc $(TARGET)
-	$(CXX) -I$(SRC) -I$(TARGET) -c -o $@ $<
+$(BIN)/%.o: $(SRC)/%.cc $(BIN)
+	$(CXX) -std=c++17 -I$(SRC) -I$(GEN) -c -o $@ $<
 
-$(TARGET)/%.o: $(TARGET)/%.cc
-	$(CXX) -I$(SRC) -I$(TARGET) -c -o $@ $<
+$(BIN)/%.o: $(GEN)/%.cc $(BIN)
+	$(CXX) -std=c++17 -I$(SRC) -I$(GEN) -c -o $@ $<
 
-all: $(TARGET)/driver
+$(TEST)/%.o: $(SPEC)/%.cc $(TEST)
+	$(CXX) -std=c++17 -I$(SPEC) -I$(SRC) -I$(GEN) -c -o $@ $<
 
-$(TARGET)/driver: $(TARGET)/driver.o $(TARGET)/scanner.o $(TARGET)/parser.o
+all: test $(TARGET)/driver
+
+test: $(TEST)/test
+	$(TEST)/test
+
+$(TARGET)/driver: $(BIN)/driver.o $(BIN)/scanner.o $(BIN)/parser.o
 	$(CXX) -o $@ $^
 
-$(TARGET):
-	$(MKDIR) $(TARGET)
+$(TEST)/test: $(TEST)/spec.o $(TEST)/poc.spec.o
+	$(CXX) -o $@ $^
 
-$(TARGET)/driver.o: $(TARGET)/parser.hh
+$(GEN):
+	$(MKDIR) -p $@
 
-$(TARGET)/scanner.o: $(TARGET)/parser.hh
+$(BIN):
+	$(MKDIR) -p $@
 
-$(TARGET)/scanner.cc: scanner.l $(TARGET)
+$(TEST):
+	$(MKDIR) -p $@
+
+$(BIN)/driver.o: $(GEN)/parser.hh
+
+$(BIN)/scanner.o: $(GEN)/parser.hh
+
+$(GEN)/scanner.cc: $(SRC)/scanner.l $(GEN)
 	$(LEX) -o $@ $<
 
-$(TARGET)/parser.cc: parser.y $(TARGET)
+$(GEN)/parser.cc: $(SRC)/parser.y $(GEN)
 	$(YACC) -d -o $@ $<
 
-$(TARGET)/parser.hh: $(TARGET)/parser.cc
+$(GEN)/parser.hh: $(GEN)/parser.cc
 
 .PHONY: clean
 clean:
