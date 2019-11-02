@@ -1,21 +1,34 @@
+#include <iostream>
 #include "spec.hh"
+
+using namespace std;
 
 namespace spec {
     Context context;
 
     void Test::test()
     {
+        cout << ">>> " << description << '\n';
         function();
+    }
+
+    void Suite::discover()
+    {
+        cout << "<<< " << description << '\n';
+
+        Suite *prev = context.updateCurrent(this);
+
+        function();
+
+        context.updateCurrent(prev);
     }
 
     void Suite::test()
     {
+        cout << ">>> " << description << '\n';
+
         Suite *prev = context.updateCurrent(this);
 
-        discovery = true;
-        function();
-
-        discovery = false;
         function();
 
         context.updateCurrent(prev);
@@ -23,69 +36,75 @@ namespace spec {
 
     void Suite::addBeforeAll(std::function<void (void)> f)
     {
-        if (discovery)
+        if (context.isDiscovery())
             beforeAll.push_back(f);
     }
 
     void Suite::addBeforeEach(std::function<void (void)> f)
     {
-        if (discovery)
+        if (context.isDiscovery())
             beforeEach.push_back(f);
     }
 
     void Suite::addAfterAll(std::function<void (void)> f)
     {
-        if (discovery)
+        if (context.isDiscovery())
             afterAll.push_back(f);
     }
 
     void Suite::addAfterEach(std::function<void (void)> f)
     {
-        if (discovery)
+        if (context.isDiscovery())
             afterEach.push_back(f);
+    }
+
+    void Suite::runTests()
+    {
+        for (auto before : beforeAll)
+            before();
+
+        for (auto child : children) {
+            for (auto before : beforeEach)
+                before();
+
+            try {
+                child->test();
+            } catch (const SpecException &ex) {
+                // XXX: what now?
+            } catch (...) {
+                // XXX: and here?
+            }
+
+            for (auto after : afterEach)
+                after();
+        }
+
+        for (auto after : afterAll)
+            after();
     }
 
     void Suite::processChild(Testable *t)
     {
-        if (discovery)
-            ++total;
-        else
-            executeTest(t);
-    }
+        if (context.isDiscovery()) {
+            children.push_back(t);
+            t->discover();
+        } else {
+            ++current;
 
-    void Suite::executeTest(Testable *t)
-    {
-        if (current == 0)
-            for (auto before : beforeAll)
-                before();
+            if (current < children.size())
+                return;
 
-        for (auto before : beforeEach)
-            before();
-
-        try {
-            t->test();
-        } catch (const SpecException &ex) {
-            // XXX: what now?
-        } catch (...) {
-            // XXX: and here?
+            runTests();
         }
-
-        for (auto after : afterEach)
-            after();
-
-        ++current;
-
-        if (current == total)
-            for (auto after : afterAll)
-                after();
     }
 
     Suite::~Suite()
     {
     }
 
-    Context::Context()
+    Context::Context(): top("top", nullptr)
     {
+        current = &top;
     }
 
     Context::~Context()
@@ -95,14 +114,11 @@ namespace spec {
     void *Context::describe(std::string description,
         std::function<void (void)> suite)
     {
-        Suite described(description, suite);
+        Suite *s = new Suite(description, suite);
 
-        if (current == nullptr)
-            described.test();
-        else
-            current->processChild(&described);
+        current->processChild(s);
 
-        return nullptr;
+        return s;
     }
 
     void Context::beforeAll(std::function<void (void)> before)
@@ -121,20 +137,14 @@ namespace spec {
         std::function<void (void)> test)
     {
         ensureNested("it");
-
-        Test described(description, test);
-
-        current->processChild(&described);
+        current->processChild(new Test(description, test));
     }
 
     void Context::xit(std::string description,
         std::function<void (void)> test)
     {
         ensureNested("xit");
-
-        Excluded described(description, test);
-
-        current->processChild(&described);
+        current->processChild(new Excluded(description, test));
     }
 
     void Context::afterAll(std::function<void (void)> after)
@@ -149,6 +159,12 @@ namespace spec {
         current->addAfterEach(after);
     }
 
+    void Context::runTests()
+    {
+        discovery = false;
+        top.runTests();
+    }
+
     Suite *Context::updateCurrent(Suite *next)
     {
         Suite *prev = current;
@@ -160,11 +176,14 @@ namespace spec {
 
     void Context::ensureNested(std::string name)
     {
-        if (current == nullptr)
+        if (current == &top)
             throw SpecException();
     }
 }
 
 int main()
 {
+    using namespace spec;
+
+    context.runTests();
 }

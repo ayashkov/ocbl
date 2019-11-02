@@ -1,3 +1,4 @@
+#include <iostream>
 #include "spec.hh"
 
 using namespace std;

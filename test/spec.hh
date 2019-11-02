@@ -2,7 +2,6 @@
 #define __SPEC_HH
 
 #include <string>
-#include <iostream>
 #include <functional>
 #include <vector>
 #include <exception>
@@ -25,6 +24,8 @@ namespace spec {
         {
         }
 
+        virtual void discover() = 0;
+
         virtual void test() = 0;
 
     protected:
@@ -39,12 +40,20 @@ namespace spec {
         {
         }
 
+        virtual void discover()
+        {
+        }
+
         virtual void test();
     };
 
     class Excluded: public Testable {
     public:
         Excluded(std::string d, std::function<void (void)> t): Testable(d, t)
+        {
+        }
+
+        virtual void discover()
         {
         }
 
@@ -61,6 +70,8 @@ namespace spec {
 
         virtual ~Suite();
 
+        virtual void discover();
+
         virtual void test();
 
         void addBeforeAll(std::function<void (void)> f);
@@ -73,12 +84,12 @@ namespace spec {
 
         void addAfterEach(std::function<void (void)> f);
 
-    private:
-        bool discovery;
+        void runTests();
 
+    private:
         int current = 0;
 
-        int total = 0;
+        std::vector<Testable*> children;
 
         std::vector<std::function<void (void)>> beforeAll;
 
@@ -87,8 +98,6 @@ namespace spec {
         std::vector<std::function<void (void)>> afterAll;
 
         std::vector<std::function<void (void)>> afterEach;
-
-        void executeTest(Testable *t);
     };
 
     class Context {
@@ -96,6 +105,11 @@ namespace spec {
         Context();
 
         ~Context();
+
+        inline bool isDiscovery()
+        {
+            return discovery;
+        }
 
         void beforeAll(std::function<void (void)> before);
 
@@ -112,10 +126,16 @@ namespace spec {
 
         void afterEach(std::function<void (void)> after);
 
+        void runTests();
+
         Suite *updateCurrent(Suite *next);
 
     private:
-        Suite *current = nullptr;
+        Suite top;
+
+        Suite *current;
+
+        bool discovery = true;
 
         void ensureNested(std::string name);
     };
