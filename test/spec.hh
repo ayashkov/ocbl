@@ -115,7 +115,7 @@ namespace spec {
 
         void beforeEach(std::function<void (void)> before);
 
-        void *describe(std::string description,
+        Suite *describe(std::string description,
             std::function<void (void)> suite);
 
         void it(std::string description, std::function<void (void)> test);
@@ -152,7 +152,7 @@ namespace spec {
         context.beforeEach(before);
     }
 
-    inline void *describe(std::string description,
+    inline Suite *describe(std::string description,
         std::function<void (void)> suite)
     {
         return context.describe(description, suite);

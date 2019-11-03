@@ -111,7 +111,7 @@ namespace spec {
     {
     }
 
-    void *Context::describe(std::string description,
+    Suite *Context::describe(std::string description,
         std::function<void (void)> suite)
     {
         Suite *s = new Suite(description, suite);
