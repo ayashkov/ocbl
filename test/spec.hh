@@ -8,6 +8,7 @@
 
 #define _() []()
 #define $() [&]()
+#define main sutMain
 
 namespace spec {
     class SpecException: public std::exception {
@@ -29,6 +30,8 @@ namespace spec {
         virtual void test() = 0;
 
     protected:
+        bool excluded = false;
+
         const std::string description;
 
         const std::function<void (void)> function;
@@ -45,21 +48,6 @@ namespace spec {
         }
 
         virtual void test();
-    };
-
-    class Excluded: public Testable {
-    public:
-        Excluded(std::string d, std::function<void (void)> t): Testable(d, t)
-        {
-        }
-
-        virtual void discover()
-        {
-        }
-
-        virtual void test()
-        {
-        }
     };
 
     class Suite: public Testable {
@@ -130,14 +118,28 @@ namespace spec {
 
         Suite *updateCurrent(Suite *next);
 
+        // void beforeSuiteStart(Suite *suite);
+
+        // void beforeTestStart(Test *test);
+
+        // void afterSuiteFinish(Suite *suite);
+
+        // void afterTestFinish();
+
     private:
         Suite top;
 
-        Suite *current;
+        Suite *currentSuite;
+
+        Test *currentTest = nullptr;
+
+        int level = 0;
 
         bool discovery = true;
 
-        void ensureNested(std::string name);
+        void ensureInSuite(std::string name);
+
+        void ensureNotInTest(std::string name);
     };
 
     extern Context context;

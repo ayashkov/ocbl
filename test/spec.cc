@@ -104,7 +104,7 @@ namespace spec {
 
     Context::Context(): top("top", nullptr)
     {
-        current = &top;
+        currentSuite = &top;
     }
 
     Context::~Context()
@@ -114,49 +114,50 @@ namespace spec {
     Suite *Context::describe(std::string description,
         std::function<void (void)> suite)
     {
+        ensureNotInTest("describe");
+
         Suite *s = new Suite(description, suite);
 
-        current->processChild(s);
+        currentSuite->processChild(s);
 
         return s;
     }
 
     void Context::beforeAll(std::function<void (void)> before)
     {
-        ensureNested("beforeAll");
-        current->addBeforeAll(before);
+        ensureInSuite("beforeAll");
+        currentSuite->addBeforeAll(before);
     }
 
     void Context::beforeEach(std::function<void (void)> before)
     {
-        ensureNested("beforeEach");
-        current->addBeforeEach(before);
+        ensureInSuite("beforeEach");
+        currentSuite->addBeforeEach(before);
     }
 
     void Context::it(std::string description,
         std::function<void (void)> test)
     {
-        ensureNested("it");
-        current->processChild(new Test(description, test));
+        ensureInSuite("it");
+        currentSuite->processChild(new Test(description, test));
     }
 
     void Context::xit(std::string description,
         std::function<void (void)> test)
     {
-        ensureNested("xit");
-        current->processChild(new Excluded(description, test));
+        ensureInSuite("xit");
     }
 
     void Context::afterAll(std::function<void (void)> after)
     {
-        ensureNested("afterAll");
-        current->addAfterAll(after);
+        ensureInSuite("afterAll");
+        currentSuite->addAfterAll(after);
     }
 
     void Context::afterEach(std::function<void (void)> after)
     {
-        ensureNested("afterEach");
-        current->addAfterEach(after);
+        ensureInSuite("afterEach");
+        currentSuite->addAfterEach(after);
     }
 
     void Context::runTests()
@@ -167,23 +168,33 @@ namespace spec {
 
     Suite *Context::updateCurrent(Suite *next)
     {
-        Suite *prev = current;
+        Suite *prev = currentSuite;
 
-        current = next;
+        currentSuite = next;
 
         return prev;
     }
 
-    void Context::ensureNested(std::string name)
+    void Context::ensureInSuite(std::string name)
     {
-        if (current == &top)
+        if (currentSuite == &top)
+            throw SpecException();
+    }
+
+    void Context::ensureNotInTest(std::string name)
+    {
+        if (currentTest != nullptr)
             throw SpecException();
     }
 }
+
+#undef main
 
 int main()
 {
     using namespace spec;
 
     context.runTests();
+
+    return 0;
 }
