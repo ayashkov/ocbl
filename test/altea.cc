@@ -18,6 +18,22 @@ namespace altea {
         testables.clear();
     }
 
+    int Suite::describe(string description, std::function<void (void)> suite)
+    {
+        add([=] {
+            return new Suite(description, suite);
+        });
+
+        return 0;
+    }
+
+    void Suite::it(string description, std::function<void (void)> test)
+    {
+        add([=] {
+            return new Test(description, test);
+        });
+    }
+
     void Suite::run()
     {
         Suite *prev = context.updateCurrent(this);
@@ -52,36 +68,11 @@ namespace altea {
 
     Context::Context(): top("top", nullptr)
     {
-        currentSuite = &top;
+        current = &top;
     }
 
     Context::~Context()
     {
-    }
-
-    int Context::describe(string description, function<void (void)> suite)
-    {
-        currentSuite->add([=] {
-            return new Suite(description, suite);
-        });
-
-        return 0;
-    }
-
-    void Context::it(string description, function<void (void)> test)
-    {
-        currentSuite->add([=] {
-            return new Test(description, test);
-        });
-    }
-
-    Suite *Context::updateCurrent(Suite *next)
-    {
-        Suite *prev = currentSuite;
-
-        currentSuite = next;
-
-        return prev;
     }
 }
 

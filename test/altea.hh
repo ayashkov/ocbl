@@ -43,6 +43,11 @@ namespace altea {
 
         virtual ~Suite();
 
+        int describe(std::string description,
+            std::function<void (void)> suite);
+
+        void it(std::string description, std::function<void (void)> test);
+
         void run();
 
         void add(std::function<Testable* (void)> gen);
@@ -63,17 +68,24 @@ namespace altea {
 
         ~Context();
 
-        int describe(std::string description,
-            std::function<void (void)> suite);
+        inline Suite *getCurrent()
+        {
+            return current;
+        }
 
-        void it(std::string description, std::function<void (void)> test);
+        inline Suite *updateCurrent(Suite *next)
+        {
+            Suite *prev = current;
 
-        Suite *updateCurrent(Suite *next);
+            current = next;
+
+            return prev;
+        }
 
     private:
         Suite top;
 
-        Suite *currentSuite;
+        Suite *current;
     };
 
     extern Context context;
@@ -81,13 +93,13 @@ namespace altea {
     inline int describe(std::string description,
         std::function<void (void)> suite)
     {
-        return context.describe(description, suite);
+        return context.getCurrent()->describe(description, suite);
     }
 
     inline void it(std::string description,
         std::function<void (void)> test)
     {
-        context.it(description, test);
+        context.getCurrent()->it(description, test);
     }
 }
 
