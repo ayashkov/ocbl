@@ -6,6 +6,7 @@
 #include <vector>
 #include <exception>
 #include <iostream>
+#include <climits>
 
 namespace altea {
     class Testable {
@@ -23,7 +24,7 @@ namespace altea {
         {
         }
 
-        virtual void run() = 0;
+        virtual void test() = 0;
     };
 
     class Test: public Testable {
@@ -32,11 +33,16 @@ namespace altea {
         {
         }
 
-        void run();
+        void test();
     };
 
     class Suite: public Testable {
     public:
+        Suite(): Testable("top", nullptr)
+        {
+            discovered = INT_MAX;
+        }
+
         Suite(std::string d, std::function<void (void)> s): Testable(d, s)
         {
         }
@@ -48,9 +54,11 @@ namespace altea {
 
         void it(std::string description, std::function<void (void)> test);
 
-        void run();
+        void test();
 
         void add(std::function<Testable* (void)> gen);
+
+        void run();
 
     private:
         bool discovery = false;

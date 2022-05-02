@@ -5,7 +5,7 @@ using namespace std;
 namespace altea {
     Context context;
 
-    void Test::run()
+    void Test::test()
     {
         function();
     }
@@ -34,7 +34,7 @@ namespace altea {
         });
     }
 
-    void Suite::run()
+    void Suite::test()
     {
         Suite *prev = context.updateCurrent(this);
 
@@ -55,18 +55,23 @@ namespace altea {
         }
     }
 
+    void Suite::run()
+    {
+        for (auto t : testables) {
+            cout << t->description << endl;
+            t->test();
+        }
+    }
+
     void Suite::checkAndRun()
     {
         if (testables.size() < discovered)
             return;
 
-        for (auto t : testables) {
-            cout << t->description << endl;
-            t->run();
-        }
+        run();
     }
 
-    Context::Context(): top("top", nullptr)
+    Context::Context(): top()
     {
         current = &top;
     }
@@ -78,5 +83,7 @@ namespace altea {
 
 int main()
 {
+    altea::context.getCurrent()->run();
+
     return 0;
 }
