@@ -122,7 +122,7 @@ namespace spec {
 
         // void beforeTestStart(Test *test);
 
-        // void afterSuiteFinish(Suite *suite);
+        // void afterSuiteFinish();
 
         // void afterTestFinish();
 

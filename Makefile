@@ -29,7 +29,7 @@ test: $(TEST)/test
 $(TARGET)/driver: $(BIN)/driver.o $(BIN)/scanner.o $(BIN)/parser.o
 	$(CXX) -o $@ $^
 
-$(TEST)/test: $(TEST)/spec.o $(TEST)/poc.spec.o
+$(TEST)/test: $(TEST)/altea.o $(TEST)/altea-poc.spec.o
 	$(CXX) -o $@ $^
 
 $(GEN):
