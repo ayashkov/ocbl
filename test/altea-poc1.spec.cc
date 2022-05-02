@@ -4,7 +4,7 @@
 using namespace std;
 using namespace altea;
 
-static auto _ = describe("Top-level context", [] {
+static auto _ = describe("Top-level 1", [] {
     auto var = "variable";
 
     it("should run one test", [&] {
